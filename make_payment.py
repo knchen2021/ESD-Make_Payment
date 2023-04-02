@@ -57,7 +57,7 @@ def success():
     
     # Confirm if payment has been completed
     if paymentStatus == 'paid':
-        # 2. Update Payment Status for appointment {payment_status}
+        # 2. Update Payment Status for appointment
         # Invoke the appointment microservice
         updateAppointment = {
             'appointment_id': appointment_id,
