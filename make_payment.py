@@ -1,10 +1,10 @@
 from flask import Flask, request, jsonify, render_template, session
 from flask_cors import CORS
-import requests, os, sys, stripe
+import requests, os, sys, stripe, uuid
 
 app = Flask(__name__)
 CORS(app)
-app.secret_key = os.environ.get('secret_key')
+app.secret_key = uuid.uuid4()
 stripe.api_key = os.environ.get('stripeKey')
 
 sendPayment_URL = "http://localhost:5000/payment"
