@@ -4,11 +4,11 @@ import requests, os, sys, stripe, uuid
 
 app = Flask(__name__)
 CORS(app)
-app.secret_key = uuid.uuid4()
+app.secret_key = str(uuid.uuid1())
 stripe.api_key = os.environ.get('stripeKey')
 
-sendPayment_URL = "http://localhost:5000/payment"
-updateStatusAppointment_URL = "http://localhost:5002/update_payment_status"
+sendPayment_URL = os.environ.get("sendPaymentURL")
+updateStatusAppointment_URL = os.environ.get("updateAppointmentURL")
 
 @app.route("/make_payment", methods=['POST'])
 def make_payment():
@@ -20,15 +20,18 @@ def make_payment():
 
             # Check if JSON Data has appointment_id
             if 'appointment_id' in paymentInfo:
-                session['appointment_id'] = paymentInfo['appointment_id']
-                print("Check if appointment_id is stored:", session.get('appointment_id'))
-                
                 # 1. Send the payment info
                 # Invoke the payment microservice
                 print('\n-----Invoking payment microservice-----')
                 result = requests.post(sendPayment_URL, json=paymentInfo).json()
                 print('payment_link:', result)
                 return jsonify(result), result["code"]
+            
+            # If no appointment id
+            return jsonify({
+                "code": 404,
+                "message": "Appointment not found"
+            }), 400
 
         except Exception as e:
             # Unexpected error in code
@@ -37,7 +40,7 @@ def make_payment():
             ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line" + str(exc_tb.tb_lineno)
             print(ex_str)
         
-    # if reached here, not a JSON request.
+    # If not a JSON request
     return jsonify({
         "code": 400,
         "message": "Invalid JSON input: " + str(request.get_data())
@@ -51,9 +54,9 @@ def success():
     print("Payment Data from Stripe:", stripe_session)
     print("Payment Status:", paymentStatus)
 
-    # Retrieve appointment_id
-    appointment_id = session.get('appointment_id')
-    print('Appointment ID from Session:', appointment_id)
+    # Retrieve appointment_id from Stripe metadata
+    appointment_id = stripe_session['metadata']['appointment_id']
+    print('Appointment ID from Stripe:', appointment_id)
     
     # Confirm if payment has been completed
     if paymentStatus == 'paid':
