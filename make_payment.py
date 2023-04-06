@@ -68,7 +68,7 @@ def success():
         }
 
         print('\n-----Invoking appointment microservice-----') 
-        paidStatus = requests.put(updateStatusAppointment_URL, json=updateAppointment).json()
+        paidStatus = requests.patch(updateStatusAppointment_URL, json=updateAppointment).json()
         print('paid_status:', paidStatus)
         
         return jsonify(
